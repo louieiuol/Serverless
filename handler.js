@@ -49,7 +49,6 @@
       // TODO: Get a Cookie value here to get an ID for the user who invoked
       //          this function
       if(flag && event.headers.cookie){
-         firsttime=false;
     	   cookieId=temp;
          console.log("cookie id is "+ cookieId);
          var params = {
@@ -65,8 +64,11 @@
            if(err){
              console.log("Unable to query. Error:", JSON.stringify(err, null, 2));
            }else{
-             siteDest=data["Item"]["address"]["S"];
-             console.log("Query succeed."+ JSON.stringify(siteDest));
+             if(data["Item"]["address"]){
+               firsttime=false;
+               siteDest=data["Item"]["address"]["S"];
+               console.log("Query succeed."+ JSON.stringify(siteDest));
+             }
              resolve(siteDest);
            }
          });
