@@ -55,9 +55,16 @@
              console.log("Unable to query. Error:", JSON.stringify(err, null, 2));
            }else{
              if(data["Item"]["address"]){
-               noAddress=false;
+               noCookie=false;
                //checking is valid website
                siteDest=data["Item"]["address"]["S"];
+               let pattern=/https:\b/i
+               let n=siteDest.search(pattern);
+               if(n==0){
+                 noAddress=false;
+               }else{
+                 noAddress=true;
+               }
                console.log("Query succeed."+ JSON.stringify(siteDest));
                //if cookieId has website stored in database
              }else{
@@ -75,20 +82,21 @@
       //SteinsertPromise: generate new cookie if either user don't have cookie id or cannot find website
       //call coordinate server to assign to new website
       if(noCookie && noAddress){
-        console.log("Don't have userid");
+        console.log("Don't have userid and no address");
         cookieId=uuidv4();
         console.log("cookieId is "+cookieId);
         console.log("don't have cookie and don't have address");
         needToCall=true;
       }else if(!noCookie && noAddress){
         needToCall=true;
+        console.log("have cookie but no address");
       }else{
         needToCall=false;
+        console.log("have cookie and have address");
       }
 
       if(needToCall){
-        console.log("new user");
-
+        console.log("new user or existing user don't have address");
         //step4: indirection server calls coordinate server
         let handlerResponse = {
           'statusCode': 200,
@@ -140,8 +148,6 @@
       });
 
       siteDest= await insertPromise;
-
-
       var cookieInfo= "userId="+cookieId;
       handlerResponse = {
         'statusCode': 200,
