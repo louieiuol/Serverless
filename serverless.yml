@@ -28,6 +28,10 @@ provider:
         - dynamodb:GetItem
         - dynamodb:UpdateItem
         - dynamodb:PutItem
+        - dynamodb:Scan
+        - dynamodb:Query
+        - dynamodb:DescribeTable
+        - dynamodb:DeleteItem
       Resource: "arn:aws:dynamodb:us-east-1:899344461848:table/userids"
 # you can overwrite defaults here
 #  stage: dev

@@ -13,6 +13,137 @@
       console.log("function starts");
       console.log('Request Headers:', JSON.stringify(event.headers.cookie));
 
+      if(event.path && event.httpMethod){
+        if(event.httpMethod=="POST"){
+          var listOfPaths=event.path.split('/');
+          var commands=listOfPaths[listOfPaths.length-1].trim();
+          if(commands == "getLog"){
+            return "not implemented";
+          }else if(commands == "getMapping"){
+            let params = {
+              TableName: 'userids'
+            }
+            let getMappingPromise = new Promise((resolve, reject) => {
+                dynamodb.scan(params, function(err,data){
+                if(err){
+                  console.log("Unable to put. Error:", JSON.stringify(err, null, 2));
+                }else{
+                  console.log("scan table"+ JSON.stringify(data["Items"]));
+                  resolve(data["Items"]);
+                }
+              });
+            });
+            let info= await getMappingPromise;
+            return JSON.stringify(info);
+          }else if(commands == "remapAllClients"){
+            //verify same hostname or port?
+            let params = {
+              TableName: 'userids'
+            }
+            let getMappingPromise = new Promise((resolve, reject) => {
+                dynamodb.scan(params, function(err,data){
+                if(err){
+                  console.log("Unable to put. Error:", JSON.stringify(err, null, 2));
+                }else{
+                  resolve(data["Items"]);
+                }
+              });
+            });
+            let info= await getMappingPromise;
+            for(let i=0; i<info.length;i++){
+              let keyinfo=info[i]["userid"]["S"];
+              let reMappingparams= {
+                TableName: 'userids',
+                Item:{
+                  "userid" :{
+                    S : keyinfo
+                  },
+                  "hostname" :{
+                    S : " "
+                  },
+                  "port" :{
+                    N : "000"
+                  }
+                }
+              };
+              let reMappingPromise = new Promise((resolve, reject) => {
+                  dynamodb.putItem(reMappingparams, function(err,data){
+                  if(err){
+                    console.log("Unable to put. Error:", JSON.stringify(err, null, 2));
+                  }else{
+                    console.log("remapAllClients successfully!");
+                    resolve(data);
+                  }
+                });
+              });
+              let deleteinfo=await reMappingPromise;
+            }
+            return "remapping success";
+          }else if(commands == "deleteMapping"){
+            if(event.body.hostname && event.body.port){
+              let hostAddress=event.body.hostname;
+              let portNum=JSON.stringify(event.body.port);
+              console.log(hostAddress);
+              console.log(portNum);
+              let deleteMappingscan = {
+                TableName: "userids",
+                ScanFilter: {
+                  "hostname" : {
+                    "AttributeValueList":[ {"S": hostAddress} ],
+                    "ComparisonOperator": "EQ"
+                  },
+                  "port" : {
+                    "AttributeValueList":[ {"N": portNum} ],
+                    "ComparisonOperator": "EQ"
+                  },
+                }
+              };
+              let deleteMappingPromise = new Promise((resolve, reject) => {
+                  dynamodb.scan(deleteMappingscan, function(err,data){
+                  if(err){
+                    console.log("hostname and port doesn't exist");
+                  }else{
+                    console.log("information fetch success")
+                    resolve(data);
+                  }
+                });
+              });
+              let deleteinfo=await deleteMappingPromise;
+              if(deleteinfo["Items"][0]){
+                let userinfo=deleteinfo["Items"][0]["userid"]["S"];
+                console.log("userid is "+userinfo);
+                let deleteparams= {
+                  TableName: 'userids',
+                  Key:{
+                    "userid" :{
+                      S : userinfo
+                    }
+                  }
+                };
+                let deletePromise = new Promise((resolve, reject) => {
+                    dynamodb.deleteItem(deleteparams, function(err,data){
+                      if(err){
+                        console.log("Unable to delete");
+                      }else{
+                        console.log("delete clients successfully!");
+                        resolve(data);
+                      }
+                    });
+                  });
+                  let lastinfo=await deletePromise;
+                  return "delete Mapping success";
+              }else{
+                return "delete mapping fails: hostname and port pairs doesn't exist";
+              }
+            }
+          }else if(commands == "setState" ){
+            return "not implemented";
+          }else{
+            return "command doesn't support"; 
+          }
+        }
+      }
+
       var findCookie = "userId" + "=";
       var flag=false;
       //boolean variable use for checking whether find cookie in headers
@@ -26,7 +157,6 @@
       if(event.headers && event.headers.cookie){
       var cookie = event.headers.cookie; //retrieve from header
       var listOfCookies = cookie.split(';');
-
       for (var i = 0; i < listOfCookies.length; i++) {
         if(listOfCookies[i].trim().indexOf(findCookie) === 0) {
           flag=true;
@@ -54,19 +184,25 @@
            if(err){
              console.log("Unable to query. Error:", JSON.stringify(err, null, 2));
            }else{
-             if(data["Item"]["address"]){
+             if(data["Item"]){
+               if(data["Item"]["hostname"]){
                noCookie=false;
                //checking is valid website
-               siteDest=data["Item"]["address"]["S"];
-               let pattern=/https:\b/i
+               siteDest=data["Item"]["hostname"]["S"];
+               let pattern=/^(https:)+/i
                let n=siteDest.search(pattern);
+               console.log(JSON.stringify(n));
                if(n==0){
                  noAddress=false;
                }else{
                  noAddress=true;
                }
                console.log("Query succeed."+ JSON.stringify(siteDest));
-               //if cookieId has website stored in database
+             }else{
+               noCookie=false;
+               noAddress=true;
+             }
+             //if cookieId has website stored in database
              }else{
                //if cookieId doesn't have valuess
                noCookie=false;
@@ -122,7 +258,7 @@
          let responseNum = await responseCoordServer;
          console.log(responseNum.body);
         //step5: receive data from coordinate server
-        var siteDestChoice=JSON.parse(responseNum.body)["address"];
+        var siteDestChoice=JSON.parse(responseNum.body)["hostname"];
         console.log(siteDestChoice);
         var params2 = {
           TableName: 'userids',
@@ -130,8 +266,11 @@
             "userid" :{
               S : cookieId
             },
-            "address" :{
+            "hostname" :{
               S : siteDestChoice
+            },
+            "port" :{
+              N : "443"
             }
           }
         };
@@ -230,5 +369,8 @@
       return resp // Return the real response
     }
   }
+
+
+
   // Use this code if you don't use the http event with the LAMBDA-PROXY integration
   // return { message: 'Go Serverless v1.0! Your function executed successfully!', event };
