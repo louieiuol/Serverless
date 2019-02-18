@@ -1,0 +1,25 @@
+{
+  "name": "serverless",
+  "version": "1.0.0",
+  "description": "please read me",
+  "main": "handler.js",
+  "dependencies": {
+    "request": "^2.88.0",
+    "serverless": "^1.37.1",
+    "uuid": "^3.3.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/louieiuol/Serverless.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/louieiuol/Serverless/issues"
+  },
+  "homepage": "https://github.com/louieiuol/Serverless#readme"
+}

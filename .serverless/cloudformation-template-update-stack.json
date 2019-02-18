@@ -105,7 +105,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/getWebInfo/dev/1550078388318-2019-02-13T17:19:48.318Z/getWebInfo.zip"
+          "S3Key": "serverless/getWebInfo/dev/1550527623189-2019-02-18T22:07:03.189Z/getWebInfo.zip"
         },
         "FunctionName": "getWebInfo-dev-getwebinfo",
         "Handler": "handler.getwebinfo",
@@ -129,14 +129,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "GetwebinfoLambdaVersionB8cUlcA3veDbn3mINHFTUzpa4M0jliE8Jf6bBbKA": {
+    "GetwebinfoLambdaVersionYbymubqcGUdHTlWykJrSamROF29bXXAsjMnrbgUJo": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "GetwebinfoLambdaFunction"
         },
-        "CodeSha256": "VKcKYU8w+G/C9ZI5nPHO+f108Kq9UcGkGCf/OqN+9Zo="
+        "CodeSha256": "jz+3IYWdi6pnFv2xaM9OPUn0Ie3uz6seaER1TO7wEWA="
       }
     },
     "userids": {
@@ -171,7 +171,7 @@
     "GetwebinfoLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "GetwebinfoLambdaVersionB8cUlcA3veDbn3mINHFTUzpa4M0jliE8Jf6bBbKA"
+        "Ref": "GetwebinfoLambdaVersionYbymubqcGUdHTlWykJrSamROF29bXXAsjMnrbgUJo"
       }
     }
   }
